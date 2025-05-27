@@ -1,0 +1,26 @@
+# Core FastAPI
+fastapi[standard]==0.115.4
+uvicorn[standard]==0.32.0
+pydantic[email]>=2.11.5
+
+# Database
+sqlalchemy>=2.0.36
+asyncpg==0.30.0
+psycopg2-binary==2.9.9  # For sync database operations in tests
+alembic==1.14.0
+
+# Security
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.12
+
+# Environment
+python-dotenv==1.0.1
+
+# Development & Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+httpx==0.28.0
+requests==2.32.3
+ruff==0.8.4
+black==24.10.0 
