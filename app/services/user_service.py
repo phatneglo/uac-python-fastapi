@@ -37,12 +37,12 @@ class UserService:
         return result.scalar_one_or_none()
     
     @staticmethod
-    async def create_user(db: AsyncSession, user_data: UserCreate) -> User:
-        """Create a new user."""
+    async def create_user(db: AsyncSession, user_data: UserCreate, default_role: str = "3") -> User:
+        """Create a new user with default role."""
         # Hash the password
         hashed_password = get_password_hash(user_data.password)
         
-        # Create user instance
+        # Create user instance with default role (3 = general user)
         db_user = User(
             username=user_data.username,
             email=user_data.email,
@@ -51,6 +51,7 @@ class UserService:
             middle_name=user_data.middle_name,
             last_name=user_data.last_name,
             mobile_number=user_data.mobile_number,
+            user_level_id=default_role,  # Assign default role
             is_active=True
         )
         
@@ -75,4 +76,17 @@ class UserService:
     async def update_last_login(db: AsyncSession, user: User) -> None:
         """Update user's last login timestamp."""
         user.last_login = func.now()
-        await db.flush() 
+        await db.flush()
+    
+    @staticmethod
+    async def assign_roles(db: AsyncSession, user_id: int, role_ids: str) -> Optional[User]:
+        """Assign roles to a user (CSV format)."""
+        result = await db.execute(select(User).where(User.user_id == user_id))
+        user = result.scalar_one_or_none()
+        
+        if user:
+            user.user_level_id = role_ids
+            await db.flush()
+            await db.refresh(user)
+        
+        return user 

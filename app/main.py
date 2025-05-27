@@ -3,23 +3,40 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers import auth_router
+from app.routers.admin import router as admin_router
+from app.services.database_service import initialize_database
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan context manager."""
     # Startup
-    print(f"Starting {settings.app_name}...")
-    print(f"Debug mode: {settings.debug}")
+    logger.info(f"Starting {settings.app_name}...")
+    logger.info(f"Debug mode: {settings.debug}")
+    
+    # Initialize database and seed data
+    try:
+        await initialize_database()
+        logger.info("Database initialization completed successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        raise
+    
     yield
+    
     # Shutdown
-    print("Shutting down...")
+    logger.info("Shutting down...")
 
 
 # Create FastAPI application
 app = FastAPI(
     title=settings.app_name,
-    description="User Access Control (UAC) API with FastAPI",
+    description="User Access Control (UAC) API with FastAPI and Role-Based Access Control",
     version="1.0.0",
     lifespan=lifespan,
     debug=settings.debug
@@ -36,6 +53,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(admin_router, prefix="/api/v1/admin", tags=["Administration"])
 
 
 @app.get("/")
